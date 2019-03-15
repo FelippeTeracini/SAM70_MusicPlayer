@@ -185,6 +185,8 @@
 /************************************************************************/
 /* variaveis globais                                                    */
 /************************************************************************/
+int PausedTime = 0;
+
 
 /************************************************************************/
 /* prototypes                                                           */
@@ -210,6 +212,9 @@ void Buzzer(int frequency, int lenght){
 	long ncycles = frequency * lenght / 1000;
 	
 	for(long i = 0; i < ncycles; i++){
+		if(!pio_get (BUT3_PIO, PIO_INPUT, BUT3_PIO_IDX_MASK)){
+			break;
+		}
 		pio_set(BUZ_PIO, BUZ_PIO_IDX_MASK);
 		delay_us(delay);
 		pio_clear(BUZ_PIO, BUZ_PIO_IDX_MASK);
@@ -222,9 +227,9 @@ void Buzzer(int frequency, int lenght){
 
 // Funcao Musica
 
-void Music(int melody[], int tempo[], int size){
+void Music(int melody[], int tempo[], int size, int pause){
 	
-	for(int i = 0; i < size; i++){
+	for(int i = pause; i < size; i++){
 		
 		int lenght = 1000 / tempo[i];
 		
@@ -234,6 +239,11 @@ void Music(int melody[], int tempo[], int size){
 		delay_ms(notedelay);
 		
 		Buzzer(0, lenght);
+		if(!pio_get (BUT3_PIO, PIO_INPUT, BUT3_PIO_IDX_MASK)){
+			PausedTime = i;
+			delay_ms(450);
+			break;
+		}
 	}
 }
 
@@ -305,7 +315,9 @@ int main (void)
 	init();
 	int sel = 0;
 	pio_clear(LED1_PIO, LED1_PIO_IDX_MASK);
-	gfx_mono_draw_string("Mario", 50,16, &sysfont);
+	gfx_mono_draw_string("Musica:", 30,0, &sysfont);
+	gfx_mono_draw_string("Mario     ", 30,16, &sysfont);
+	
 	
 	int MarioMelody[] = {
 		NOTE_E7, NOTE_E7, 0, NOTE_E7,
@@ -469,39 +481,39 @@ int main (void)
 		8, 8, 8, 8, 8, 2
 	};
 	
-	int MegalovaniaMelody[] = {	
-		293, 293, 587,
-		440, 415, 391,
-		349, 293, 349,
-		391, 261, 261,
-		587, 440, 415,
-		391, 349, 293,
-		349, 391, 246,
-		246, 587, 440,
-		415, 391, 349,
-		293, 349, 391,
-		233, 233, 587,
-		440, 415, 391,
-		349, 293, 349,
-		391, 293, 293,
-		587, 440, 415,
-		391, 349, 293,
-		349, 391, 261,
-		261, 587, 440,
-		415, 391, 349,
-		293, 349, 391,
-		246, 246, 587,
-		440, 415, 391,
-		349, 293, 349,
-		391, 233, 233,
-		587, 440, 415,
-		391, 349, 293,
-		349, 391, 293,
-		293, 587, 440,
-		415, 391, 349,
-		293, 349, 391,
-		261, 261, 587,
-		440, 415, 391
+	int MegalovaniaMelody[] = {
+		293*4, 293*4, 587*4,
+		440*4, 415*4, 391*4,
+		349*4, 293*4, 349*4,
+		391*4, 261*4, 261*4,
+		587*4, 440*4, 415*4,
+		391*4, 349*4, 293*4,
+		349*4, 391*4, 246*4,
+		246*4, 587*4, 440*4,
+		415*4, 391*4, 349*4,
+		293*4, 349*4, 391*4,
+		233*4, 233*4, 587*4,
+		440*4, 415*4, 391*4,
+		349*4, 293*4, 349*4,
+		391*4, 293*4, 293*4,
+		587*4, 440*4, 415*4,
+		391*4, 349*4, 293*4,
+		349*4, 391*4, 261*4,
+		261*4, 587*4, 440*4,
+		415*4, 391*4, 349*4,
+		293*4, 349*4, 391*4,
+		246*4, 246*4, 587*4,
+		440*4, 415*4, 391*4,
+		349*4, 293*4, 349*4,
+		391*4, 233*4, 233*4,
+		587*4, 440*4, 415*4,
+		391*4, 349*4, 293*4,
+		349*4, 391*4, 293*4,
+		293*4, 587*4, 440*4,
+		415*4, 391*4, 349*4,
+		293*4, 349*4, 391*4,
+		261*4, 261*4, 587*4,
+		440*4, 415*4, 391
 	};
 	
 	int MegalovaniaTime[] = {
@@ -703,39 +715,40 @@ int main (void)
 	
 	while(1) {
 		if(!pio_get (BUT1_PIO, PIO_INPUT, BUT1_PIO_IDX_MASK)){
-			
+			PausedTime = 0;
 			if(sel == 0){
-				Music(MarioMelody, MarioTime, 78);
+				Music(MarioMelody, MarioTime, 78,0);
 			}
 			else if(sel == 1){
-				Music(MegalovaniaMelody, MegalovaniaTime, 100);
+				Music(MegalovaniaMelody, MegalovaniaTime, 100,0);
 			}
 			else if(sel == 2){
-				Music(PiratesMelody, PiratesTime, 76);
+				Music(PiratesMelody, PiratesTime, 76,0);
 			}
 
 
 		}
 		
 		if(!pio_get (BUT2_PIO, PIO_INPUT, BUT2_PIO_IDX_MASK)){
+			PausedTime = 0;
 			if(sel == 0){
 				pio_set(LED1_PIO, LED1_PIO_IDX_MASK);
 				pio_clear(LED2_PIO, LED2_PIO_IDX_MASK);
-				gfx_mono_draw_string("Megalo ", 50,16, &sysfont);
+				gfx_mono_draw_string("Undertale", 30,16, &sysfont);
 				sel = 1;
 				delay_ms(400);
 			}
 			else if(sel == 1){
 				pio_set(LED2_PIO, LED2_PIO_IDX_MASK);
 				pio_clear(LED3_PIO, LED3_PIO_IDX_MASK);
-				gfx_mono_draw_string("Piratas", 50,16, &sysfont);
+				gfx_mono_draw_string("Piratas  ", 30,16, &sysfont);
 				sel = 2;
 				delay_ms(400);
 			}
 			else if(sel == 2){
 				pio_set(LED3_PIO, LED3_PIO_IDX_MASK);
 				pio_clear(LED1_PIO, LED1_PIO_IDX_MASK);
-				gfx_mono_draw_string("Mario  ", 50,16, &sysfont);
+				gfx_mono_draw_string("Mario    ", 30,16, &sysfont);
 				sel = 0;
 				delay_ms(400);
 			}
@@ -743,7 +756,15 @@ int main (void)
 		}
 
 		if(!pio_get (BUT3_PIO, PIO_INPUT, BUT3_PIO_IDX_MASK)){
-
+			if(sel == 0){
+				Music(MarioMelody, MarioTime, 78,PausedTime);
+			}
+			else if(sel == 1){
+				Music(MegalovaniaMelody, MegalovaniaTime, 100,PausedTime);
+			}
+			else if(sel == 2){
+				Music(PiratesMelody, PiratesTime, 76,PausedTime);
+			}
 		}
 	}
 	/* Insert application code here, after the board has been initialized. */
